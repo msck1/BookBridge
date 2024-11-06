@@ -3,7 +3,6 @@ import { connection } from '../config.js';
 
 async function createUser (req, res) {
     const { nomeuser , email, senha } = req.body;
-    console.log(req.body);
 
     try {
 

@@ -3,12 +3,13 @@ import { connection } from '../config.js';
 
 async function createUser (req, res) {
     const { nomeuser , email, senha } = req.body;
-
+  
     if (!nomeuser || !email || !senha) {
         return res.status(500).json({
             message: "Nome de usuário, email e senha são obrigatórios"
         });
     }
+
 
     try {
 

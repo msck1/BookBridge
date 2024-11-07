@@ -3,6 +3,12 @@ import { connection } from "../config.js";
 async function addBookToClub(req, res) {
     const { titulo, nomebookclub } = req.body;
 
+    if (!titulo ||!nomebookclub) {
+        return res.status(500).json({
+            message: "Titulo e nome do clube é obrigatório"
+        });
+    }
+
     try {
 
         const insert = `INSERT INTO book_club_book (book_id, book_club_id) VALUES ((SELECT idbooks FROM books WHERE titulo = ?), (SELECT idbookclub FROM book_club WHERE nomebookclub = ?));`
@@ -26,11 +32,17 @@ async function addBookToClub(req, res) {
 }
 // busca todos livros daquele clube
 async function readBookInClub(req, res) {
-    const { nomebookclub } = req.body; 
+    const { nomebookclub } = req.body;
+
+    if (!nomebookclub) {
+        return res.status(500).json({
+            message: "Nome do clube é obrigatório"
+        });
+    }
 
     try {
         // devido a tabela associativa a query precisa de um ou mais inner join para achar o id correto de acordo com o nosso where
-        const selectByClub = `SELECT titulo, nomebookclub FROM book_club INNER JOIN book_club_book ON book_club.idbookclub = book_club_book.book_club_id INNER JOIN books ON book_club_book.book_id = books.idbooks WHERE nomebookclub = ?;`;
+        const selectByClub = `SELECT titulo, nomebookclub FROM book_club INNER JOIN book_club_book ON book_club.idbookclub = book_club_book.book_club_id INNER JOIN books ON book_club_book.book_id = books.idbooks WHERE nomebookclub = ?`;
         const books = await connection.query(selectByClub, nomebookclub);
         connection.release();
         res.status(201).send(books);
@@ -49,9 +61,15 @@ async function readBookInClub(req, res) {
 async function readClubWithBook(req, res) {
     const { titulo } = req.body;
 
+    if (!titulo) {
+        return res.status(500).json({
+            message: "Titulo é obrigatório"
+        });
+    }
+
     try {
         // mesma logica da query acima
-        const selectByBook = `SELECT nomebookclub FROM book_club INNER JOIN book_club_book ON book_club.idbookclub = book_club_book.book_club_id INNER JOIN books ON book_club_book.book_id = books.idbooks WHERE titulo = ?;`;
+        const selectByBook = `SELECT nomebookclub FROM book_club INNER JOIN book_club_book ON book_club.idbookclub = book_club_book.book_club_id INNER JOIN books ON book_club_book.book_id = books.idbooks WHERE titulo = ?`;
         const books = await connection.query(selectByBook, titulo);
         connection.release();
         res.status(201).send(books);
@@ -70,7 +88,7 @@ async function readAllBooksClubs(req, res) {
 
     try {
 
-        const select = `SELECT nomebookclub, titulo FROM book_club INNER JOIN book_club_book ON book_club.idbookclub = book_club_book.book_club_id INNER JOIN books ON book_club_book.book_id = books.idbooks;`;
+        const select = `SELECT nomebookclub, titulo FROM book_club INNER JOIN book_club_book ON book_club.idbookclub = book_club_book.book_club_id INNER JOIN books ON book_club_book.book_id = books.idbooks`;
         const clubsbooks = await connection.query(select);
         connection.release();
         res.status(201).send(clubsbooks);
@@ -86,9 +104,14 @@ async function readAllBooksClubs(req, res) {
 
 async function updateBookInClub(req, res) {
     const { titulonovo, nomebookclub } = req.body;
+    
+    if (!titulonovo ||!nomebookclub) {
+        return res.status(500).json({
+            message: "Titulo novo e nome do clube é obrigatório"
+        });
+    }
 
     try {
-
 
         const updateByName = `UPDATE book_club_book INNER JOIN books ON book_club_book.book_id = books.idbooks INNER JOIN book_club ON book_club_book.book_club_id = book_club.idbookclub SET book_id = (SELECT idbooks FROM books WHERE titulo = ?) WHERE nomebookclub = ?`;
         const books = await connection.query(updateByName, [titulonovo, nomebookclub]);
@@ -106,6 +129,12 @@ async function updateBookInClub(req, res) {
 
 async function updateClubInList(req, res) {
     const { nomebookclub, nomebookclubantigo } = req.body;
+    
+    if (!nomebookclub || !nomebookclubantigo) {
+        return res.status(500).json({
+            message: "Nome do clube e nome do clube antigo é obrigatório"
+        });
+    }
 
     try {
 
@@ -125,6 +154,12 @@ async function updateClubInList(req, res) {
 
 async function deleteClubListByName(req, res) {
     const { nomebookclub } = req.body;
+
+    if (!nomebookclub) {
+        return res.status(500).json({
+            message: "Nome do clube é obrigatório"
+        });
+    }
 
     try {
 

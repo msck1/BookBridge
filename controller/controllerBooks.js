@@ -11,6 +11,16 @@ async function createBook (req, res) {
 
     try {
 
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para criar livros"
+            })
+        }
+
         const checkDuplicate = `SELECT idbooks FROM books WHERE titulo = ? AND autores = ? AND sinopse = ? LIMIT 1`;
         const [existingBooks] = await connection.query(checkDuplicate, [titulo, autores, sinopse]);
 
@@ -45,6 +55,16 @@ async function readBook (req, res) {
     
     try {
 
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para ler livros"
+            })
+        }
+
         const select = `SELECT * FROM books`;
         const books = await connection.query(select);
         connection.release();
@@ -70,6 +90,16 @@ async function readBookByAuthor (req, res) {
     }
     
     try {
+
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para ler livros"
+            })
+        }
 
         const selectByAuthor = `SELECT * FROM books WHERE autores = ?`;
         const books = await connection.query(selectByAuthor, autores);
@@ -97,6 +127,16 @@ async function updateBookByAuthor (req, res) {
     
     try {
 
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para atualizar livros"
+            })
+        }
+
         const updateByAuthor = `UPDATE books SET titulo = ? , sinopse = ?, autores = ? WHERE autores = ?`;
         const books = await connection.query(updateByAuthor, [titulo, sinopse, autores, autoresantigos]);
         connection.release();
@@ -122,6 +162,16 @@ async function deleteBookByAuthor (req, res) {
     }
     
     try {
+
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para deletar livros"
+            })
+        }
 
         const deleteByAuthor = `DELETE FROM books WHERE autores = ?`;
         const books = await connection.query(deleteByAuthor, autores);

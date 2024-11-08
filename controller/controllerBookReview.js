@@ -11,6 +11,16 @@ async function createReview(req, res) {
 
     try {
 
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+        
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para criar reviews"
+            })
+        }
+
         const checkDuplicate = `SELECT idbookreviews FROM book_review INNER JOIN books ON book_review.book_review_id = books.idbooks INNER JOIN users ON book_review.user_review_id = users.idusers WHERE titulo = ? AND nomeuser = ?`;
         const [duplicateResult] = await connection.query(checkDuplicate, [titulo, user]);
         

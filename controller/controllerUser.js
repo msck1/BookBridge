@@ -75,7 +75,7 @@ async function readUserByEmail (req, res) {
         const [users] = await connection.query(selectByEmail, [email]);
 
         if (req.user.idusers !== users[0].idusers) {
-            return res.status(403).send({ message: 'Acesso negado' });
+            return res.status(403).send({ message: 'Voce não tem permissão para atualiar usuarios' });
         }
 
         connection.release();

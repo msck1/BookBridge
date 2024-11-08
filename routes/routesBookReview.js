@@ -1,5 +1,5 @@
 import express from 'express';
-import { createReview, readReview, readReviewByBook, readReviewByName, } from '../controller/controllerBookReview.js';
+import { createReview, deleteReviewByName, readReview, readReviewByBook, readReviewByName, updateReviewByName } from '../controller/controllerBookReview.js';
 
 // rotas para review de livros
 
@@ -12,5 +12,9 @@ routerReview.get('/readReview', readReview);
 routerReview.get('/readReviewByName', readReviewByName);
 
 routerReview.get('/readReviewByBook', readReviewByBook);
+
+routerReview.put('/updateReviewByName', updateReviewByName);
+
+routerReview.delete('/deleteReviewByName', deleteReviewByName)
 
 export { routerReview };

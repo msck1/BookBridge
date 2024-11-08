@@ -74,8 +74,8 @@ async function readReviewByBook(req, res) {
 
     try {
 
-        const select = `SELECT titulo, nomeuser, nota, comentario FROM book_review INNER JOIN users ON book_review.user_review_id = users.idusers INNER JOIN books ON book_review.book_review_id = books.idbooks WHERE titulo = ?`;
-        const query = await connection.query(select, titulo);
+        const selectByBook = `SELECT titulo, nomeuser, nota, comentario FROM book_review INNER JOIN users ON book_review.user_review_id = users.idusers INNER JOIN books ON book_review.book_review_id = books.idbooks WHERE titulo = ?`;
+        const query = await connection.query(selectByBook, titulo);
         connection.release();
         res.status(201).send(query);
         
@@ -100,8 +100,8 @@ async function readReviewByName(req, res) {
 
     try {
 
-        const select = `SELECT titulo, nomeuser, nota, comentario FROM book_review INNER JOIN users ON book_review.user_review_id = users.idusers INNER JOIN books ON book_review.book_review_id = books.idbooks WHERE nomeuser = ?`;
-        const query = await connection.query(select, nomeuser);
+        const selectByName = `SELECT titulo, nomeuser, nota, comentario FROM book_review INNER JOIN users ON book_review.user_review_id = users.idusers INNER JOIN books ON book_review.book_review_id = books.idbooks WHERE nomeuser = ?`;
+        const query = await connection.query(selectByName, nomeuser);
         connection.release();
         res.status(201).send(query);
         
@@ -114,7 +114,54 @@ async function readReviewByName(req, res) {
     
 }
 
-// implementar update e delete
+async function updateReviewByName(req, res) {
+    const { nomeuser, titulo, nota, comentario, nomeuserantigo, tituloantigo } = req.body;
 
+    if (!nomeuser || !titulo || !nota || !comentario || !nomeuserantigo || !tituloantigo) {
+        return res.status(500).json({
+            message: "Nome de usuario, titulo, nota, comentario, nome de usuario antigo e titulo antigo é obrigatório"
+        });
+    }
 
-export { createReview, readReview, readReviewByBook, readReviewByName};
+    try {
+
+        const updateByName = `UPDATE book_review INNER JOIN books ON book_review.book_review_id = books.idbooks INNER JOIN users ON users.idusers = book_review.user_review_id SET book_review_id = (SELECT idbooks FROM books WHERE titulo = ?), user_review_id = (SELECT idusers FROM users WHERE nomeuser = ?), nota = ?, comentario = ? WHERE titulo = ? AND nomeuser = ?`
+        const query = await connection.query(updateByName, [titulo, nomeuser, nota, comentario, tituloantigo, nomeuserantigo]);
+        connection.release();
+        res.status(201).send(query);
+        
+    } catch (err) {
+
+        connection.release();
+        res.status(501).send(err);
+        
+    }
+    
+}
+
+async function deleteReviewByName(req, res) {
+    const { nomeuser, titulo } = req.body;
+
+    if (!nomeuser || !titulo) {
+        return res.status(500).json({
+            message: "Nome de usuario, titulo, nota, comentario, nome de usuario antigo e titulo antigo é obrigatório"
+        });
+    }
+
+    try {
+
+        const deleteByName = `DELETE book_review FROM book_review INNER JOIN books ON book_review.book_review_id = books.idbooks INNER JOIN users ON users.idusers = book_review.user_review_id WHERE nomeuser = ? AND titulo = ?`;
+        const query = connection.query(deleteByName, [nomeuser, titulo]);
+        connection.release();
+        res.status(201).send(query);
+        
+    } catch (err) {
+
+        connection.release();
+        res.status(501).send(err);
+        
+    }
+    
+}
+
+export { createReview, readReview, readReviewByBook, readReviewByName, updateReviewByName, deleteReviewByName};

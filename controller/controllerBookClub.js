@@ -13,6 +13,16 @@ async function createClub (req, res) {
 
     try {
 
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para criar clubes"
+            })
+        }
+
         const checkDuplicate = `SELECT idbookclub FROM book_club WHERE nomebookclub = ? OR descricao = ? LIMIT 1`;
         const [existingClubs] = await connection.query(checkDuplicate, [nomebookclub, descricao]);
 
@@ -47,6 +57,16 @@ async function readClub (req, res) {
     
     try {
 
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para criar listar clubes"
+            })
+        }
+
         const select = `SELECT * FROM book_club`;
         const clubs = await connection.query(select);
         connection.release();
@@ -71,6 +91,16 @@ async function readClubByName(req, res) {
     }
 
     try {
+
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para listar clubes"
+            })
+        }
 
         const selectByName = `SELECT * FROM book_club WHERE nomebookclub = ?`;
         const clubs = await connection.query(selectByName, nomebookclub);
@@ -98,6 +128,16 @@ async function updateClubByName(req, res) {
 
     
     try {
+
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para atualizar clubes"
+            })
+        }
         
         const updateByName = `UPDATE book_club SET nomebookclub = ?, descricao = ? WHERE nomebookclub = ?`;
         const clubs = await connection.query(updateByName, [nomebookclub, descricao, nomeantigo]);
@@ -126,6 +166,16 @@ async function deleteClubByName(req, res) {
 
 
     try {
+
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const [userExists] = await connection.query(checkUser, idUser);
+
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para deletar clubes"
+            })
+        }
         
         const deleteByName = `DELETE FROM book_club WHERE nomebookclub = ?`;
         const clubs = await connection.query(deleteByName, nomebookclub);

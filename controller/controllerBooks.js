@@ -11,7 +11,7 @@ async function createBook (req, res) {
 
     try {
 
-        const checkDuplicate = `SELECT id FROM books WHERE titulo = ? AND autores = ? AND sinopse = ? LIMIT 1`;
+        const checkDuplicate = `SELECT idbooks FROM books WHERE titulo = ? AND autores = ? AND sinopse = ? LIMIT 1`;
         const [existingBooks] = await connection.query(checkDuplicate, [titulo, autores, sinopse]);
 
         if (existingBooks.length > 0) {

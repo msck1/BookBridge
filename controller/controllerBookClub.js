@@ -13,13 +13,13 @@ async function createClub (req, res) {
 
     try {
 
-        const checkDuplicate = `SELECT id FROM book_club WHERE nomebookclub = ? AND descricao = ?LIMIT 1`;
+        const checkDuplicate = `SELECT idbookclub FROM book_club WHERE nomebookclub = ? OR descricao = ? LIMIT 1`;
         const [existingClubs] = await connection.query(checkDuplicate, [nomebookclub, descricao]);
 
         if (existingClubs.length > 0) {
             return res.status(500).json({
                 error: "Conflito",
-                message: "Já existe um clube com este nome"
+                message: "Já existe um clube com este nome ou descricao"
             });
         }
         

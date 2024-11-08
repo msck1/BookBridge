@@ -1,4 +1,3 @@
-import jwt from 'jsonwebtoken';
 import { connection } from '../config.js';
 
 async function createUser (req, res) {
@@ -18,7 +17,7 @@ async function createUser (req, res) {
         
         if (existingUsers.length > 0) {
             return res.status(500).json({
-                message: "Este nome de usuário já está em uso"
+                message: "Este usuario já esta em uso"
             });
         }
 

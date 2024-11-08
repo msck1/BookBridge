@@ -48,7 +48,7 @@ async function createTables (connection, database) {
 
         const tableBookClub = `CREATE TABLE IF NOT EXISTS book_club
         (idbookclub INT AUTO_INCREMENT PRIMARY KEY,
-        nomebookclub VARCHAR(40),
+        nomebookclub VARCHAR(40) UNIQUE,
         descricao VARCHAR(255))`;
 
         const tableUserBookClub = `CREATE TABLE IF NOT EXISTS user_book_club

@@ -3,6 +3,7 @@ import { addBookToClub, readAllBooksClubs, readBookInClub, readClubWithBook, upd
 import { verifyToken } from '../middleware/token.js';
 
 
+
 // rotas para gerenciar livros que estao sendo lido por um clube
 
 const routerList = express();
@@ -18,6 +19,8 @@ routerList.get('/readClubWithBook', verifyToken, readClubWithBook);
 routerList.put('/updateBookInClub', verifyToken, updateBookInClub);
 
 routerList.put('/updateClubInList', verifyToken, updateClubInList);
+
+routerList.put('/updateBookStatus', verifyToken,updateBookStatus);
 
 routerList.delete('/deleteClubListByName',verifyToken, deleteClubListByName);
 

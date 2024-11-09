@@ -4,11 +4,11 @@ import NodeCache from 'node-cache';
 const myCache = new NodeCache({ stdTTL: 10});
 
 async function addBookToClub(req, res) {
-    const { titulo, nomebookclub } = req.body;
+    const { titulo, nomebookclub, status } = req.body;
 
-    if (!titulo ||!nomebookclub) {
+    if (!titulo ||!nomebookclub || !status) {
         return res.status(500).json({
-            message: "Titulo e nome do clube é obrigatório"
+            message: "Titulo, nome do clube e status é obrigatório"
         });
     }
 
@@ -26,10 +26,12 @@ async function addBookToClub(req, res) {
 
         const insert = `INSERT INTO book_club_book (book_id, book_club_id) VALUES ((SELECT idbooks FROM books WHERE titulo = ?), (SELECT idbookclub FROM book_club WHERE nomebookclub = ?));`
         const [result] = await connection.query(insert, [titulo, nomebookclub]);
+      
         const newList = {
             id: result.insertId,
             titulo,
             nomebookclub,
+            status
         }
 
         connection.release();
@@ -144,6 +146,7 @@ async function readAllBooksClubs(req, res) {
 
     try {
 
+
         const cacheKey = "allBooksClubs";
         const cached = myCache.get(cacheKey);
 
@@ -163,6 +166,7 @@ async function readAllBooksClubs(req, res) {
 
 
         const select = `SELECT nomebookclub, titulo FROM book_club INNER JOIN book_club_book ON book_club.idbookclub = book_club_book.book_club_id INNER JOIN books ON book_club_book.book_id = books.idbooks`;
+
         const clubsbooks = await connection.query(select);
 
         myCache.set(cacheKey, clubsbooks);
@@ -249,6 +253,33 @@ async function updateClubInList(req, res) {
     
 }
 
+
+async function updateBookStatus(req, res) {
+    const { status, nomebookclub, titulo} = req.body;
+    
+    if (!status || !nomebookclub || !titulo) {
+        return res.status(500).json({
+            message: "Status do livro, nome do clube e titulo é obrigatorio"
+        });
+    }
+
+    try {
+
+        const updateByName = `UPDATE book_club_book INNER JOIN books ON book_club_book.book_id = books.idbooks INNER JOIN book_club ON book_club_book.book_club_id = book_club.idbookclub SET status = ? WHERE nomebookclub = ? AND titulo = ?`;
+        const books = await connection.query(updateByName, [status, nomebookclub, titulo]);
+        connection.release();
+        res.status(201).send(books);
+        
+    } catch (err) {
+
+        connection.release();
+        res.status(500).send(err);
+        
+    }
+    
+}
+
+
 async function deleteClubListByName(req, res) {
     const { nomebookclub } = req.body;
 
@@ -285,4 +316,4 @@ async function deleteClubListByName(req, res) {
 }
 
 
-export { addBookToClub, readBookInClub, readClubWithBook, readAllBooksClubs, updateBookInClub, updateClubInList, deleteClubListByName };
+export { addBookToClub, readBookInClub, readClubWithBook, readAllBooksClubs, updateBookInClub, updateClubInList, deleteClubListByName, updateBookStatus };

@@ -48,13 +48,14 @@ async function createTables (connection, database) {
 
         const tableBookClub = `CREATE TABLE IF NOT EXISTS book_club
         (idbookclub INT AUTO_INCREMENT PRIMARY KEY,
-        nomebookclub VARCHAR(40),
+        nomebookclub VARCHAR(40) UNIQUE,
         descricao VARCHAR(255))`;
 
         const tableUserBookClub = `CREATE TABLE IF NOT EXISTS user_book_club
         (iduserbookclub INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         book_club_id INT NOT NULL,
+        status VARCHAR(255),
         FOREIGN KEY (user_id) REFERENCES users(idusers) ON DELETE CASCADE,
         FOREIGN KEY (book_club_id) REFERENCES book_club(idbookclub) ON DELETE CASCADE)`;
 

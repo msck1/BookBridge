@@ -1,25 +1,27 @@
 import express from 'express';
-import { addBookToClub, readAllBooksClubs, readBookInClub, readClubWithBook, updateBookInClub, updateClubInList, deleteClubListByName, updateBookStatus} from '../controller/controllerList.js';
+import { addBookToClub, readAllBooksClubs, readBookInClub, readClubWithBook, updateBookInClub, updateClubInList, deleteClubListByName} from '../controller/controllerList.js';
+import { verifyToken } from '../middleware/token.js';
+
 
 
 // rotas para gerenciar livros que estao sendo lido por um clube
 
 const routerList = express();
 
-routerList.post('/addBookToClub', addBookToClub);
+routerList.post('/addBookToClub', verifyToken, addBookToClub);
 
-routerList.get('/readAllBooksClubs', readAllBooksClubs);
+routerList.get('/readAllBooksClubs', verifyToken, readAllBooksClubs);
 
-routerList.get('/readBookInClub', readBookInClub);
+routerList.get('/readBookInClub', verifyToken, readBookInClub);
 
-routerList.get('/readClubWithBook', readClubWithBook);
+routerList.get('/readClubWithBook', verifyToken, readClubWithBook);
 
-routerList.put('/updateBookInClub', updateBookInClub);
+routerList.put('/updateBookInClub', verifyToken, updateBookInClub);
 
-routerList.put('/updateClubInList', updateClubInList);
+routerList.put('/updateClubInList', verifyToken, updateClubInList);
 
-routerList.put('/updateBookStatus', updateBookStatus);
+routerList.put('/updateBookStatus', verifyToken,updateBookStatus);
 
-routerList.delete('/deleteClubListByName', deleteClubListByName);
+routerList.delete('/deleteClubListByName',verifyToken, deleteClubListByName);
 
 export { routerList };

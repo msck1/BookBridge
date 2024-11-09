@@ -6,8 +6,8 @@ import { verifyToken } from '../middleware/token.js';
 
 const routerStats = express();
 
-routerStats.get('/readBookReviewAvg', verifyToken, readAvgBookReview);
+routerStats.post('/readBookReviewAvg', verifyToken, readAvgBookReview);
 
-routerStats.get('/readBookStatus', verifyToken, readBookStatusInClub);
+routerStats.post('/readBookStatus', verifyToken, readBookStatusInClub);
 
 export { routerStats };

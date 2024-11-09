@@ -4,7 +4,7 @@ import NodeCache from 'node-cache';
 const myCache = new NodeCache({ stdTTL: 10});
 
 async function addBookToClub(req, res) {
-    const { titulo, nomebookclub, status } = req.body;
+    const { titulo, nomebookclub, status } = req.body; // os status do livro devem ser Lendo, Concluido ou Terminado
 
     if (!titulo ||!nomebookclub || !status) {
         return res.status(500).json({
@@ -24,14 +24,23 @@ async function addBookToClub(req, res) {
             })
         }
 
-        const insert = `INSERT INTO book_club_book (book_id, book_club_id) VALUES ((SELECT idbooks FROM books WHERE titulo = ?), (SELECT idbookclub FROM book_club WHERE nomebookclub = ?));`
-        const [result] = await connection.query(insert, [titulo, nomebookclub]);
+        const checkDuplicate = `SELECT book_id, book_club_id from book_club_book INNER JOIN books ON books.idbooks = book_club_book.book_id INNER JOIN book_club ON book_club.idbookclub = book_club_book.book_club_id WHERE book_id = (SELECT idbooks FROM books WHERE titulo = ?) AND book_club_id = (SELECT idbookclub FROM book_club WHERE nomebookclub = ?);`;
+        const [existingBook] = await connection.query(checkDuplicate, [titulo, nomebookclub]);
+        
+        if (existingBook.length > 0) {
+            return res.status(500).json({
+                message: "Este livro já foi adicionado"
+            });
+        }
+
+        const insert = `INSERT INTO book_club_book (book_id, book_club_id, book_status) VALUES ((SELECT idbooks FROM books WHERE titulo = ?), (SELECT idbookclub FROM book_club WHERE nomebookclub = ?), ?);`
+        const [result] = await connection.query(insert, [titulo, nomebookclub, status]);
       
         const newList = {
             id: result.insertId,
             titulo,
             nomebookclub,
-            status
+            status,
         }
 
         connection.release();

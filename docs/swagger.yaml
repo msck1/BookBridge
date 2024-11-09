@@ -1,0 +1,1625 @@
+openapi: 3.0.0
+info:
+  title: BookBridge
+  description: API for managing user accounts and book clubs
+  version: 1.0.0
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        nomeuser:
+          type: string
+          description: Username of the user
+        email:
+          type: string
+          format: email
+          description: Email address of the user
+        senha:
+          type: string
+          description: Password of the user
+      required:
+        - nomeuser
+        - email
+        - senha
+    LoginRequest:
+      type: object
+      properties:
+        nomeuser:
+          type: string
+          description: Username for login
+        senha:
+          type: string
+          description: Password for login
+      required:
+        - nomeuser
+        - senha
+
+    LoginResponse:
+      type: object
+      properties:
+        payload:
+          type: object
+          properties:
+            idusers:
+              type: integer
+            nomeuser:
+              type: string
+            email:
+              type: string
+            senha:
+              type: string
+        token:
+          type: string
+          description: JWT token for authentication
+    
+    Book:
+      type: object
+      properties:
+        titulo:
+          type: string
+          description: Title of the book
+        sinopse:
+          type: string
+          description: Synopsis of the book
+        autores:
+          type: string
+          description: Author(s) of the book
+      required:
+        - titulo
+        - sinopse
+        - autores
+
+    Club:
+      type: object
+      required:
+        - nomebookclub
+        - descricao
+        - idbookclub
+      properties:
+        idbookclub:
+          type: int
+          description: Id of the book club
+        nomebookclub:
+          type: string
+          description: Name of the book club
+        descricao:
+          type: string
+          description: Description of the book club
+
+    Review:
+      type: object
+      required:
+        - titulo
+        - user
+        - nota
+        - comentario
+      properties:
+        titulo:
+          type: string
+          description: Title of the book being reviewed
+        user:
+          type: string
+          description: Username of the reviewer
+        nota:
+          type: number
+          description: Rating given to the book (max 5)
+          maximum: 5
+          minimum: 0
+        comentario:
+          type: string
+          description: Review comment
+        
+    BookClubEntry:
+      type: object
+      properties:
+        titulo:
+          type: string
+          example: "The Great Gatsby"
+        nomebookclub:
+          type: string
+          example: "Classic Literature Club"
+        status:
+          type: string
+          enum: [Lendo, Concluido, Terminado]
+          example: "Lendo"
+
+    BookUpdate:
+      type: object
+      properties:
+        titulonovo:
+          type: string
+          example: "1984"
+        nomebookclub:
+          type: string
+          example: "Classic Literature Club"
+
+    ClubUpdate:
+      type: object
+      properties:
+        nomebookclub:
+          type: string
+          example: "New Club Name"
+        nomebookclubantigo:
+          type: string
+          example: "Old Club Name"
+
+    StatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [Lendo, Concluido, Terminado]
+          example: "Concluido"
+        nomebookclub:
+          type: string
+          example: "Classic Literature Club"
+        titulo:
+          type: string
+          example: "The Great Gatsby"
+
+    UserClubEntry:
+      type: object
+      properties:
+        nomeusuario:
+          type: string
+          example: "John Doe"
+        nomebookclub:
+          type: string
+          example: "Classic Literature Club"
+
+    ClubUpdate:
+      type: object
+      properties:
+        nomebookclub:
+          type: string
+          example: "New Club Name"
+        nomebookclubantigo:
+          type: string
+          example: "Old Club Name"
+
+    UserUpdate:
+      type: object
+      properties:
+        usernovo:
+          type: string
+          example: "Jane Doe"
+        nomebookclub:
+          type: string
+          example: "Classic Literature Club"
+
+    UserClubDelete:
+      type: object
+      properties:
+        nomebookclub:
+          type: string
+          example: "Classic Literature Club"
+        nomeuser:
+          type: string
+          example: "John Doe"
+
+    BookReviewRequest:
+      type: object
+      required:
+        - titulo
+      properties:
+        titulo:
+          type: string
+          description: Book title to search for
+    
+    BookReviewResponse:
+      type: object
+      properties:
+        titulo:
+          type: string
+        Total_de_Reviews:
+          type: integer
+        Media_Geral:
+          type: number
+          format: float
+    
+    BookClubRequest:
+      type: object
+      required:
+        - nomebookclub
+      properties:
+        nomebookclub:
+          type: string
+          description: Name of the book club
+    
+    BookClubStatusResponse:
+      type: object
+      properties:
+        nomebookclub:
+          type: string
+        Livros_Concluidos:
+          type: integer
+        Livros_Lendo:
+          type: integer
+        Livros_Dropados:
+          type: integer
+
+
+paths:
+
+  /createUser:
+    post:
+      summary: Create a new user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '500':
+          description: Error creating user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /readUser:
+    get:
+      summary: Get all users
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /readUserByEmail:
+    get:
+      summary: Get user by email
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+                - email
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /updateUserByEmail:
+    put:
+      summary: Update user by email
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nomeuser:
+                  type: string
+                senha:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                emailantigo:
+                  type: string
+                  format: email
+              required:
+                - nomeuser
+                - senha
+                - email
+                - emailantigo
+      responses:
+        '201':
+          description: User updated successfully
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /deleteUserByEmail:
+    delete:
+      summary: Delete user by email
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+                - email
+      responses:
+        '201':
+          description: User deleted successfully
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /loginUser:
+    post:
+      summary: Login user and get JWT token
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '201':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '500':
+          description: Login failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  
+  /createBook:
+    post:
+      summary: Create a new book
+      tags:
+        - Books
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '201':
+          description: Book created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error creating book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /readBook:
+    get:
+      summary: Get all books
+      tags:
+        - Books
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Books retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /readBookByAuthor:
+    get:
+      summary: Get books by author
+      tags:
+        - Books
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                autores:
+                  type: string
+                  description: Author name to search for
+              required:
+                - autores
+      responses:
+        '200':
+          description: Books retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /updateBookByAuthor:
+    put:
+      summary: Update book by author
+      tags:
+        - Books
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                sinopse:
+                  type: string
+                autores:
+                  type: string
+                autoresantigos:
+                  type: string
+              required:
+                - titulo
+                - sinopse
+                - autores
+                - autoresantigos
+      responses:
+        '201':
+          description: Book updated successfully
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /deleteBookByAuthor:
+    delete:
+      summary: Delete book by author
+      tags:
+        - Books
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                autores:
+                  type: string
+                  description: Author name of books to delete
+              required:
+                - autores
+      responses:
+        '201':
+          description: Book deleted successfully
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /createClub:
+    post:
+      summary: Create a new book club
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Clubs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Club'
+      responses:
+        '201':
+          description: Club created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  nomebookclub:
+                    type: string
+                  descricao:
+                    type: string
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error or incomplete data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readClub:
+    get:
+      summary: Get all book clubs
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Clubs
+      responses:
+        '200':
+          description: List of all clubs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  clubs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Club'
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readClubByName:
+    get:
+      summary: Get book club by name
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Clubs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nomebookclub
+              properties:
+                nomebookclub:
+                  type: string
+      responses:
+        '200':
+          description: Club information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  clubs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Club'
+        '403':
+          description: Unauthorized access
+        '500':
+          description: Server error
+
+  /updateClubByName:
+    put:
+      summary: Update book club information
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Clubs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nomebookclub
+                - descricao
+                - nomeantigo
+              properties:
+                nomebookclub:
+                  type: string
+                  description: New name for the club
+                descricao:
+                  type: string
+                  description: New description for the club
+                nomeantigo:
+                  type: string
+                  description: Current name of the club to be updated
+      responses:
+        '201':
+          description: Club updated successfully
+        '403':
+          description: Unauthorized access
+        '500':
+          description: Server error
+
+  /deleteClubByName:
+    delete:
+      summary: Delete a book club
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Clubs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nomebookclub
+              properties:
+                nomebookclub:
+                  type: string
+                  description: Name of the club to delete
+      responses:
+        '201':
+          description: Club deleted successfully
+        '403':
+          description: Unauthorized access
+        '500':
+          description: Server error
+
+  /createReview:
+    post:
+      summary: Create a new book review
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Reviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+      responses:
+        '201':
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  titulo:
+                    type: string
+                  user:
+                    type: string
+                  nota:
+                    type: number
+                  comentario:
+                    type: string
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readReview:
+    get:
+      summary: Get all book reviews
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Reviews
+      responses:
+        '200':
+          description: List of all reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  query:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        titulo:
+                          type: string
+                        nomeuser:
+                          type: string
+                        nota:
+                          type: number
+                        comentario:
+                          type: string
+        '501':
+          description: Server error
+
+  /readReviewByBook:
+    get:
+      summary: Get reviews for a specific book
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Reviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - titulo
+              properties:
+                titulo:
+                  type: string
+                  description: Title of the book to get reviews for
+      responses:
+        '200':
+          description: Reviews for the specified book
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  query:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        titulo:
+                          type: string
+                        nomeuser:
+                          type: string
+                        nota:
+                          type: number
+                        comentario:
+                          type: string
+        '500':
+          description: Server error or missing title
+        '501':
+          description: Server error
+
+  /readReviewByName:
+    get:
+      summary: Get reviews by user name
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Reviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nomeuser
+              properties:
+                nomeuser:
+                  type: string
+                  description: Username to get reviews for
+      responses:
+        '200':
+          description: Reviews by the specified user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  query:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        titulo:
+                          type: string
+                        nomeuser:
+                          type: string
+                        nota:
+                          type: number
+                        comentario:
+                          type: string
+        '500':
+          description: Server error or missing username
+        '501':
+          description: Server error
+
+  /updateReviewByName:
+    put:
+      summary: Update a book review
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Reviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nomeuser
+                - titulo
+                - nota
+                - comentario
+                - nomeuserantigo
+                - tituloantigo
+              properties:
+                nomeuser:
+                  type: string
+                  description: New username for the review
+                titulo:
+                  type: string
+                  description: New book title for the review
+                nota:
+                  type: number
+                  description: New rating
+                  maximum: 5
+                  minimum: 0
+                comentario:
+                  type: string
+                  description: New review comment
+                nomeuserantigo:
+                  type: string
+                  description: Current username on the review
+                tituloantigo:
+                  type: string
+                  description: Current book title on the review
+      responses:
+        '201':
+          description: Review updated successfully
+        '500':
+          description: Server error or missing required fields
+        '501':
+          description: Server error
+
+  /deleteReviewByName:
+    delete:
+      summary: Delete a book review
+      security:
+        - bearerAuth: []
+      tags:
+        - Book Reviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nomeuser
+                - titulo
+              properties:
+                nomeuser:
+                  type: string
+                  description: Username of the review to delete
+                titulo:
+                  type: string
+                  description: Book title of the review to delete
+      responses:
+        '201':
+          description: Review deleted successfully
+        '500':
+          description: Server error or missing required fields
+        '501':
+          description: Server error
+
+  /addBookToClub:
+    post:
+      summary: Add a book to a book club
+      tags:
+        - Book Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookClubEntry'
+      responses:
+        '201':
+          description: Book successfully added to club
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  titulo:
+                    type: string
+                  nomebookclub:
+                    type: string
+                  status:
+                    type: string
+        '500':
+          description: Error adding book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readAllBooksClubs:
+    get:
+      summary: Get all books and their associated clubs
+      tags:
+        - Book Club Management
+      responses:
+        '201':
+          description: Successfully retrieved all books and clubs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  clubsbooks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nomebookclub:
+                          type: string
+                        titulo:
+                          type: string
+        '500':
+          description: Error retrieving data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readBookInClub:
+    get:
+      summary: Get all books in a specific club
+      tags:
+        - Book Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nomebookclub:
+                  type: string
+                  example: "Classic Literature Club"
+      responses:
+        '201':
+          description: Successfully retrieved books in club
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  books:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        titulo:
+                          type: string
+                        nomebookclub:
+                          type: string
+        '500':
+          description: Error retrieving data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readClubWithBook:
+    get:
+      summary: Get all clubs that have a specific book
+      tags:
+        - Book Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                  example: "The Great Gatsby"
+      responses:
+        '201':
+          description: Successfully retrieved clubs with book
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  books:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nomebookclub:
+                          type: string
+        '500':
+          description: Error retrieving data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /updateBookInClub:
+    put:
+      summary: Update a book in a club
+      tags:
+        - Book Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookUpdate'
+      responses:
+        '201':
+          description: Book successfully updated
+        '500':
+          description: Error updating book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /updateClubInList:
+    put:
+      summary: Update club name in the list
+      tags:
+        - Book Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubUpdate'
+      responses:
+        '201':
+          description: Club successfully updated
+        '500':
+          description: Error updating club
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /updateBookStatus:
+    put:
+      summary: Update book status in a club
+      tags:
+        - Book Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdate'
+      responses:
+        '201':
+          description: Book status successfully updated
+        '500':
+          description: Error updating status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /deleteClubListByName:
+    delete:
+      summary: Delete a club's book list by club name
+      tags:
+        - Book Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nomebookclub:
+                  type: string
+                  example: "Classic Literature Club"
+      responses:
+        '201':
+          description: Club list successfully deleted
+        '500':
+          description: Error deleting club list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /addUserToClub:
+    post:
+      summary: Add a user to a book club
+      tags:
+        - User Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserClubEntry'
+      responses:
+        '201':
+          description: User successfully added to club
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  nomeusuario:
+                    type: string
+                  nomebookclub:
+                    type: string
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error adding user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readAllUserBookClub:
+    get:
+      summary: Get all users and their associated clubs
+      tags:
+        - User Club Management
+      responses:
+        '201':
+          description: Successfully retrieved all users and clubs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  clubsbooks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nomebookclub:
+                          type: string
+                        nomeuser:
+                          type: string
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error retrieving data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readUsersInClub:
+    get:
+      summary: Get all users in a specific club
+      tags:
+        - User Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nomebookclub:
+                  type: string
+                  example: "Classic Literature Club"
+      responses:
+        '200':
+          description: Successfully retrieved users in club
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nomeuser:
+                          type: string
+                        nomebookclub:
+                          type: string
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error retrieving data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readClubWithUser:
+    get:
+      summary: Get all clubs associated with a specific user
+      tags:
+        - User Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nomeuser:
+                  type: string
+                  example: "John Doe"
+      responses:
+        '201':
+          description: Successfully retrieved clubs for user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  clubs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nomebookclub:
+                          type: string
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error retrieving data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /updateUserInClub:
+    put:
+      summary: Update a user in a club
+      tags:
+        - User Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '201':
+          description: User successfully updated
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error updating user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /updateClubWithClub:
+    put:
+      summary: Update club name in user associations
+      tags:
+        - User Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubUpdate'
+      responses:
+        '201':
+          description: Club successfully updated
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error updating club
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /deleteUserClub:
+    delete:
+      summary: Remove a user from a club
+      tags:
+        - User Club Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserClubDelete'
+      responses:
+        '201':
+          description: User successfully removed from club
+        '403':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error removing user from club
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readBookReviewAvg:
+    post:
+      security:
+        - BearerAuth: []
+      summary: Get average book review statistics
+      description: Retrieves the average rating and total number of reviews for a specific book
+      tags:
+        - Statistics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookReviewRequest'
+      responses:
+        '201':
+          description: Successfully retrieved book review statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookReviewResponse'
+        '500':
+          description: Title is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '501':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /readBookStatus:
+    post:
+      security:
+        - BearerAuth: []
+      summary: Get book status statistics for a club
+      description: Retrieves the count of books by status (Completed, Reading, Dropped) for a specific book club
+      tags:
+        - Statistics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookClubRequest'
+      responses:
+        '201':
+          description: Successfully retrieved book club statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookClubStatusResponse'
+        '500':
+          description: Book club name is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '501':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

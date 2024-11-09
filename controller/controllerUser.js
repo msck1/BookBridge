@@ -222,7 +222,7 @@ async function loginUser(req, res) { // cria token de acordo com o usuario do bo
             senha: user.senha,
         }
 
-        const token = jwt.sign(payload, 'segredo', {expiresIn: '1h'});
+        const token = jwt.sign(payload, 'segredo', {expiresIn: '7d'});
 
         connection.release();
         res.status(201).send({ payload, token});

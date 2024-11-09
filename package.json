@@ -17,5 +17,10 @@
     "mysql2": "^3.11.4",
     "node-cache": "^5.1.2",
     "winston": "^3.16.0"
+  },
+  "devDependencies": {
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   }
 }

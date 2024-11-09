@@ -55,6 +55,7 @@ async function createTables (connection, database) {
         (iduserbookclub INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         book_club_id INT NOT NULL,
+        status VARCHAR(255),
         FOREIGN KEY (user_id) REFERENCES users(idusers) ON DELETE CASCADE,
         FOREIGN KEY (book_club_id) REFERENCES book_club(idbookclub) ON DELETE CASCADE)`;
 

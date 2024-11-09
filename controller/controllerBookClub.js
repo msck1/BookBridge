@@ -1,4 +1,7 @@
 import { connection } from "../config.js";
+import NodeCache from 'node-cache';
+
+const myCache = new NodeCache({ stdTTL: 10});
 
 async function createClub (req, res) {
     const { nomebookclub , descricao } = req.body
@@ -57,6 +60,14 @@ async function readClub (req, res) {
     
     try {
 
+        const cacheKey = `allClubs`;
+        const cached = myCache.get(cacheKey);
+
+        if (cached) {
+            console.log("Pego do cache");
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
+
         const idUser = req.user.idusers;
         const checkUser = `SELECT * FROM users WHERE idusers = ?`
         const [userExists] = await connection.query(checkUser, idUser);
@@ -69,8 +80,11 @@ async function readClub (req, res) {
 
         const select = `SELECT * FROM book_club`;
         const clubs = await connection.query(select);
+
+        myCache.set(cacheKey, clubs);
+
         connection.release();
-        res.status(201).send(clubs);
+        res.status(201).send({ message: "Dados pegos do banco de dados", clubs});
         
     } catch (err) {
 
@@ -92,6 +106,14 @@ async function readClubByName(req, res) {
 
     try {
 
+        const cacheKey = `clubBy${nomebookclub}`;
+        const cached = myCache.get(cacheKey);
+
+        if (cached) {
+            console.log("Pego do cache");
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
+
         const idUser = req.user.idusers;
         const checkUser = `SELECT * FROM users WHERE idusers = ?`
         const [userExists] = await connection.query(checkUser, idUser);
@@ -104,8 +126,12 @@ async function readClubByName(req, res) {
 
         const selectByName = `SELECT * FROM book_club WHERE nomebookclub = ?`;
         const clubs = await connection.query(selectByName, nomebookclub);
+
+        
+        myCache.set(cacheKey, clubs)
+
         connection.release();
-        res.status(201).send(clubs);
+        res.status(201).send({ message: "Dados pegos do banco de dados", clubs});
         
     } catch (err) {
 

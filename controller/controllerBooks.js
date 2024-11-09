@@ -1,4 +1,7 @@
 import { connection } from '../config.js';
+import NodeCache from 'node-cache';
+
+const myCache = new NodeCache({ stdTTL: 10});
 
 async function createBook (req, res) {
     const { titulo, sinopse, autores } = req.body;
@@ -55,6 +58,9 @@ async function readBook (req, res) {
     
     try {
 
+        const cacheKey = `readAllBooks`;
+        const cached = myCache.get(cacheKey)
+
         const idUser = req.user.idusers;
         const checkUser = `SELECT * FROM users WHERE idusers = ?`
         const [userExists] = await connection.query(checkUser, idUser);
@@ -65,10 +71,18 @@ async function readBook (req, res) {
             })
         }
 
+        if (cached) {
+            console.log("Pego do cache");
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
+
         const select = `SELECT * FROM books`;
         const books = await connection.query(select);
+
+        myCache.set(cacheKey, books)
+
         connection.release();
-        res.status(201).send(books);
+        res.status(201).send({ message: "Dados pegos do banco de dados", books});
         
     } catch (err) {
 
@@ -91,6 +105,9 @@ async function readBookByAuthor (req, res) {
     
     try {
 
+        const cacheKey = `allBooksBy${autores}`;
+        const cached = myCache.get(cacheKey);
+
         const idUser = req.user.idusers;
         const checkUser = `SELECT * FROM users WHERE idusers = ?`
         const [userExists] = await connection.query(checkUser, idUser);
@@ -101,10 +118,18 @@ async function readBookByAuthor (req, res) {
             })
         }
 
+        if (cached) {
+            console.log("Pego do cache");
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
+
         const selectByAuthor = `SELECT * FROM books WHERE autores = ?`;
         const books = await connection.query(selectByAuthor, autores);
+
+        myCache.set(cacheKey, books)
+
         connection.release();
-        res.status(201).send(books);
+        res.status(201).send({ message: "Dados pegos do banco de dados ", books});
         
     } catch (err) {
 
@@ -146,7 +171,7 @@ async function updateBookByAuthor (req, res) {
 
         connection.release();
         res.status(500).send(err);
-        
+        b
     }
     
     

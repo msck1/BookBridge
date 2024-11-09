@@ -1,4 +1,7 @@
 import { connection } from "../config.js";
+import NodeCache from 'node-cache';
+
+const myCache = new NodeCache({ stdTTL: 10});
 
 async function addUserToClub(req, res) {
     const { nomeusuario, nomebookclub } = req.body;
@@ -52,8 +55,11 @@ async function readUsersInClub(req, res) {
 
     try {
 
+        const cacheKey = `usersIn${nomebookclub}`;
+        const cached = myCache.get(cacheKey);
+
         const idUser = req.user.idusers;
-        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`;
         const [userExists] = await connection.query(checkUser, idUser);
         
         if (userExists[0].idusers !== req.user.idusers) {
@@ -62,10 +68,17 @@ async function readUsersInClub(req, res) {
             });
         }
 
+        if (cached) {
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
+
         const selectByClub = `SELECT nomeuser, nomebookclub FROM book_club INNER JOIN user_book_club ON user_book_club.book_club_id = book_club.idbookclub INNER JOIN users ON users.idusers = user_book_club.user_id WHERE nomebookclub = ?`;
         const users = await connection.query(selectByClub, nomebookclub);
+
+        myCache.set(cacheKey, users);
+
         connection.release();
-        res.status(200).send(users);
+        res.status(200).send({ messaage: "Dados pegos do banco de dados", users});
         
     } catch (err) {
 
@@ -86,21 +99,31 @@ async function readClubWithUser(req, res) {
 
     try {
 
+        
+        const cacheKey = `ClubWith${nomeuser}`;
+        const cached = myCache.get(cacheKey);
+
         const idUser = req.user.idusers;
-        const checkUser = `SELECT * FROM users WHERE idusers = ?`
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`;
         const [userExists] = await connection.query(checkUser, idUser);
         
         if (userExists[0].idusers !== req.user.idusers) {
             return res.status(403).send({
                 message: "Você não tem permissão para visualizar clubes"
-            })
+            });
         }
 
+        if (cached) {
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
 
         const selectByUsers = `SELECT nomebookclub FROM book_club INNER JOIN user_book_club ON user_book_club.book_club_id = book_club.idbookclub INNER JOIN users ON users.idusers = user_book_club.user_id WHERE nomeuser = ?`;
         const clubs = await connection.query(selectByUsers, nomeuser);
+
+        myCache.set(cacheKey, clubs);
+
         connection.release();
-        res.status(201).send(clubs);
+        res.status(201).send({ message: "Dados pegos do banco de dados", clubs});
         
     } catch (err) {
 
@@ -116,6 +139,10 @@ async function readAllUserBooksClubs(req, res) {
 
     try {
 
+        const cacheKey = "allUserBooksClubs";
+        const cached = myCache.get(cacheKey);
+
+
         const idUser = req.user.idusers;
         const checkUser = `SELECT * FROM users WHERE idusers = ?`
         const [userExists] = await connection.query(checkUser, idUser);
@@ -126,10 +153,17 @@ async function readAllUserBooksClubs(req, res) {
             })
         }
 
+        if (cached) {
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
+
         const select = `SELECT nomebookclub, nomeuser FROM book_club INNER JOIN user_book_club ON user_book_club.book_club_id = book_club.idbookclub INNER JOIN users ON users.idusers = user_book_club.user_id`;
         const clubsbooks = await connection.query(select);
+
+        myCache.set(cacheKey, users);
+
         connection.release();
-        res.status(201).send(clubsbooks);
+        res.status(201).send({ message: "Dados pegos do banco de dados", clubsbooks});
         
     } catch (err) {
 

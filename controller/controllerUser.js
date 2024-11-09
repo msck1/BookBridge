@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken'
 import { connection } from '../config.js';
+import NodeCache from 'node-cache';
+
+const myCache = new NodeCache({ stdTTL: 10});
 
 async function createUser (req, res) {
     const { nomeuser , email, senha } = req.body;
@@ -46,10 +49,31 @@ async function readUser (req, res) {
 
     try {
 
+        const cacheKey = "userList";
+        const cached = myCache.get(cacheKey);
+
+        const idUser = req.user.idusers;
+        const checkUser = `SELECT * FROM users WHERE idusers = ?`;
+        const [userExists] = await connection.query(checkUser, idUser);
+        
+        if (userExists[0].idusers !== req.user.idusers) {
+            return res.status(403).send({
+                message: "Você não tem permissão para ler usuários"
+            });
+        }
+
+        if (cached) {
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
+
         const select = `SELECT * FROM users`;
-        const users = await connection.query(select);
+        const [users] = await connection.query(select);
+
+        myCache.set(cacheKey, users);
+
         connection.release();
-        res.status(201).send(users);
+        res.status(200).send({message: "Dados pegos do banco de dados", users});
+
         
     } catch (err) {
 
@@ -71,6 +95,14 @@ async function readUserByEmail (req, res) {
 
     try {
 
+        const cacheKey = `userList${email}`;
+        const cached = myCache.get(cacheKey);
+
+        if (cached) {
+            console.log("Pego do cache");
+            return res.status(200).send({message: "Dados pegos do cache", cached});
+        }
+
         const selectByEmail = `SELECT * FROM users WHERE email = ?`
         const [users] = await connection.query(selectByEmail, [email]);
 
@@ -78,8 +110,10 @@ async function readUserByEmail (req, res) {
             return res.status(403).send({ message: 'Voce não tem permissão para ler usuarios' });
         }
 
+        myCache.set(cacheKey, users)
+
         connection.release();
-        res.status(201).send(users);
+        res.status(201).send({ message: "Dados pegos do banco de dados",users});
         
     } catch (err) {
 

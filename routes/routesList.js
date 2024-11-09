@@ -1,5 +1,5 @@
 import express from 'express';
-import { addBookToClub, readAllBooksClubs, readBookInClub, readClubWithBook, updateBookInClub, updateClubInList, deleteClubListByName} from '../controller/controllerList.js';
+import { addBookToClub, readAllBooksClubs, readBookInClub, readClubWithBook, updateBookInClub, updateClubInList, deleteClubListByName, updateBookStatus} from '../controller/controllerList.js';
 import { verifyToken } from '../middleware/token.js';
 
 
@@ -20,7 +20,7 @@ routerList.put('/updateBookInClub', verifyToken, updateBookInClub);
 
 routerList.put('/updateClubInList', verifyToken, updateClubInList);
 
-routerList.put('/updateBookStatus', verifyToken,updateBookStatus);
+routerList.put('/updateBookStatus', verifyToken, updateBookStatus);
 
 routerList.delete('/deleteClubListByName',verifyToken, deleteClubListByName);
 

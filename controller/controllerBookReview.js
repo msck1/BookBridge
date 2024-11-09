@@ -71,9 +71,9 @@ async function readReview(req, res) {
         const cacheKey = `allReview`;
         const cached = myCache.get(cacheKey);
 
-        if (req.user.idusers !== users[0].idusers) {
-            return res.status(403).send({ message: 'Voce não tem permissão para ler usuarios' });
-        }
+        // if (req.user.idusers !== users[0].idusers) {
+        //     return res.status(403).send({ message: 'Voce não tem permissão para ler usuarios' });
+        // }
 
         if (cached) {
             console.log("Pego do cache");
